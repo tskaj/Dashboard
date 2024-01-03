@@ -1,53 +1,148 @@
-import React, { useState, useEffect } from 'react'
-import "../assets/css/login.css";
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { Grid, Paper, Avatar, TextField, Button, Typography, Link, IconButton } from "@material-ui/core";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
+import logo from "./logo.png";
+import Brightness4Icon from "@material-ui/icons/Brightness4";
+import Brightness7Icon from "@material-ui/icons/Brightness7";
 
-function Login() {
+const Login = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [credentials, setCredentials] = useState({ enrollment: "", password: "" });
 
-  const host = "http://localhost:5000";
-  const navigate = useNavigate();
+  const toggleDarkMode = () => {
+    setIsDarkMode(prevMode => !prevMode);
+    applyDarkMode(isDarkMode); // Apply dark mode to the entire DOM
+  };
 
-  useEffect(()=>{
-    if (localStorage.getItem("faculty-token")){
-      navigate("/admin/dashboard");
+  const applyDarkMode = isDarkMode => {
+    const body = document.querySelector("body");
+    if (isDarkMode) {
+      body.classList.add("dark-mode");
+    } else {
+      body.classList.remove("dark-mode");
     }
-  }, [])
+  };
 
-  const [credentials, setCredentials] = useState({email: "", password: ""})
+  const handleInputChange = e => {
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
 
-  const handleChange = (e) => {
-    setCredentials({...credentials, [e.target.name]: e.target.value});
-}
-
-  const login = async (e)=>{
+  const handleLogin = async e => {
     e.preventDefault();
-    const response = await fetch(`${host}/faculty/login`, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json"
-      },
-      body: JSON.stringify(credentials)
-    })
-    const json = await response.json();
-    if (json.success){
-      localStorage.setItem("faculty-token", json.token);
-      navigate("/admin/dashboard");
-    }else{
-      window.alert(json.message);
+    try {
+      const response = await fetch("http://localhost:5000/faculty/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(credentials)
+      });
+      const json = await response.json();
+      if (json.success) {
+        localStorage.setItem("faculty-token", json.token);
+        // Redirect or navigate to dashboard on successful login
+        // Replace '/admin/dashboard' with your actual dashboard route
+        window.location.href = "/admin/dashboard";
+      } else {
+        window.alert(json.message);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      window.alert("An error occurred during login.");
     }
-  }
-  return (
-    <>
-      <h1>Login</h1>
-      <form onSubmit={login} className="login-form">
-        <label htmlFor="email">Enter Email</label>
-        <input type="text" name="email" id="email" required value={credentials.email} onChange={handleChange} />
-        <label htmlFor="password">Enter Password</label>
-        <input type="password" name="password" id="password" required value={credentials.password} onChange={handleChange}/>
-        <button type="submit">Login</button>
-      </form> 
-    </>
-  )
-}
+  };
 
-export default Login
+  const paperStyle = {
+    padding: 20,
+    height: "110vh",
+    width: 280,
+    margin: "20px auto",
+    backgroundColor: isDarkMode ? "#333" : "#fff",
+    color: isDarkMode ? "#fff" : "#333"
+  };
+
+  const avatarStyle = {
+    backgroundColor: "#1bbd7e",
+    width: 180,
+    height: 180,
+    marginBottom: 20
+  };
+
+  const btnstyle = { margin: "8px 0" };
+
+  return (
+    <Grid container justifyContent="center">
+      <Paper elevation={10} style={paperStyle}>
+        <Grid align="center">
+          <Avatar src={logo} style={avatarStyle} />
+          <h2>Sign In</h2>
+          <IconButton onClick={toggleDarkMode}>
+            {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+        </Grid>
+        <form onSubmit={handleLogin}>
+          <TextField
+            label="Email"
+            placeholder="Enter email"
+            fullWidth
+            required
+            variant="outlined"
+            style={{ marginBottom: 15 }}
+            InputProps={{
+              style: {
+                backgroundColor: isDarkMode ? "#444" : "#fff",
+                color: isDarkMode ? "#fff" : "#333"
+              }
+            }}
+            name="email"
+            value={credentials.email}
+            onChange={handleInputChange}
+          />
+          <TextField
+            label="Password"
+            placeholder="Enter password"
+            type="password"
+            fullWidth
+            required
+            variant="outlined"
+            style={{ marginBottom: 15 }}
+            InputProps={{
+              style: {
+                backgroundColor: isDarkMode ? "#444" : "#fff",
+                color: isDarkMode ? "#fff" : "#333"
+              }
+            }}
+            name="password"
+            value={credentials.password}
+            onChange={handleInputChange}
+          />
+          <FormControlLabel
+            control={<Checkbox name="checkedB" color="primary" />}
+            label="Remember me"
+            style={{ marginBottom: 10 }}
+            labelPlacement="end"
+          />
+          <Button
+            type="submit"
+            color="primary"
+            variant="contained"
+            style={btnstyle}
+            fullWidth
+          >
+            Sign in
+          </Button>
+        </form>
+        <Typography>
+          <Link href="#">Forgot password ?</Link>
+        </Typography>
+        <Typography>
+          {" "}
+          Do you have an account ?<Link href="#">Sign Up</Link>
+        </Typography>
+      </Paper>
+    </Grid>
+  );
+};
+
+export default Login;

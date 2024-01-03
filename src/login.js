@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  Grid,
-  Paper,
-  Avatar,
-  TextField,
-  Button,
-  Typography,
-  Link,
-  IconButton
-} from "@material-ui/core";
+import { Grid, Paper, Avatar, TextField, Button, Typography, Link, IconButton } from "@material-ui/core";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import logo from "../components/images/logo.png";
@@ -17,6 +8,7 @@ import Brightness7Icon from "@material-ui/icons/Brightness7";
 
 const Login = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [credentials, setCredentials] = useState({ enrollment: "", password: "" });
 
   const toggleDarkMode = () => {
     setIsDarkMode(prevMode => !prevMode);
@@ -29,6 +21,35 @@ const Login = () => {
       body.classList.add("dark-mode");
     } else {
       body.classList.remove("dark-mode");
+    }
+  };
+
+  const handleInputChange = e => {
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
+
+  const handleLogin = async e => {
+    e.preventDefault();
+    try {
+      const response = await fetch("http://localhost:5000/faculty/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(credentials)
+      });
+      const json = await response.json();
+      if (json.success) {
+        localStorage.setItem("faculty-token", json.token);
+        // Redirect or navigate to dashboard on successful login
+        // Replace '/admin/dashboard' with your actual dashboard route
+        window.location.href = "/admin/dashboard";
+      } else {
+        window.alert(json.message);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      window.alert("An error occurred during login.");
     }
   };
 
@@ -60,50 +81,58 @@ const Login = () => {
             {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Grid>
-        <TextField
-          label="Enrollment"
-          placeholder="Enter username"
-          fullWidth
-          required
-          variant="outlined"
-          style={{ marginBottom: 15 }}
-          InputProps={{
-            style: {
-              backgroundColor: isDarkMode ? "#444" : "#fff",
-              color: isDarkMode ? "#fff" : "#333"
-            }
-          }}
-        />
-        <TextField
-          label="Password"
-          placeholder="Enter password"
-          type="password"
-          fullWidth
-          required
-          variant="outlined"
-          style={{ marginBottom: 15 }}
-          InputProps={{
-            style: {
-              backgroundColor: isDarkMode ? "#444" : "#fff",
-              color: isDarkMode ? "#fff" : "#333"
-            }
-          }}
-        />
-        <FormControlLabel
-          control={<Checkbox name="checkedB" color="primary" />}
-          label="Remember me"
-          style={{ marginBottom: 10 }}
-          labelPlacement="end"
-        />
-        <Button
-          type="submit"
-          color="primary"
-          variant="contained"
-          style={btnstyle}
-          fullWidth
-        >
-          Sign in
-        </Button>
+        <form onSubmit={handleLogin}>
+          <TextField
+            label="Email"
+            placeholder="Enter email"
+            fullWidth
+            required
+            variant="outlined"
+            style={{ marginBottom: 15 }}
+            InputProps={{
+              style: {
+                backgroundColor: isDarkMode ? "#444" : "#fff",
+                color: isDarkMode ? "#fff" : "#333"
+              }
+            }}
+            name="Email"
+            value={credentials.email}
+            onChange={handleInputChange}
+          />
+          <TextField
+            label="Password"
+            placeholder="Enter password"
+            type="password"
+            fullWidth
+            required
+            variant="outlined"
+            style={{ marginBottom: 15 }}
+            InputProps={{
+              style: {
+                backgroundColor: isDarkMode ? "#444" : "#fff",
+                color: isDarkMode ? "#fff" : "#333"
+              }
+            }}
+            name="password"
+            value={credentials.password}
+            onChange={handleInputChange}
+          />
+          <FormControlLabel
+            control={<Checkbox name="checkedB" color="primary" />}
+            label="Remember me"
+            style={{ marginBottom: 10 }}
+            labelPlacement="end"
+          />
+          <Button
+            type="submit"
+            color="primary"
+            variant="contained"
+            style={btnstyle}
+            fullWidth
+          >
+            Sign in
+          </Button>
+        </form>
         <Typography>
           <Link href="#">Forgot password ?</Link>
         </Typography>
